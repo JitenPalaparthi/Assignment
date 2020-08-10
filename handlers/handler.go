@@ -30,7 +30,7 @@ func Ping() func(c *gin.Context) {
 func FetchPlaces(me *mapenabler.MapEnabler) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		if c.Request.Method == "GET" {
-			chanResult := make(chan models.Result)                         // Channel is used to send data of each fetch
+			chanResult := make(chan *models.Result)                        // Channel is used to send data of each fetch
 			chanSignal := make(chan bool)                                  // Signal to close channel and ensure to fetch all data
 			var Results []models.Result                                    // Each fetch request is added to this slice
 			location := c.Query("loc")                                     // Must be a valid location and location is mandatory
@@ -44,12 +44,16 @@ func FetchPlaces(me *mapenabler.MapEnabler) func(c *gin.Context) {
 				go me.FetchMapsDataWithChan(location, cat, chanResult) // Concurrent FetchMapsdata . upon fetch data is passed to chanResult channel
 			}
 			go func() {
+				counter := 0
 				for {
 					select {
 					case result := <-chanResult:
-						Results = append(Results, result) //When data is received from the channel and added to the slice
+						if result != nil {
+							Results = append(Results, *result) //When data is received from the channel and added to the slice
+						}
+						counter++
 					default:
-						if len(Results) == len(me.Categories) {
+						if counter == len(me.Categories) {
 							close(chanResult)  // When to close the channel it is trickey part. In this scenario  it is based on number of catagories
 							chanSignal <- true // Once channel is closed can signal for the further process.. Can use workGroups as well but this is simple way
 							return
