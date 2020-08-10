@@ -1,0 +1,6 @@
+FROM alpine
+ENV PORT=50053
+COPY bin/app .
+RUN chmod 777 app
+EXPOSE 50053
+ENTRYPOINT ["./app"]
