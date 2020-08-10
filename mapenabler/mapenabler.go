@@ -25,9 +25,6 @@ type MapEnabler struct {
 	BaseURL    string
 	PlacesURI  string
 	Size       int
-	ChanResult chan *models.Result
-	ChanSignal chan bool
-	Results    []*models.Result
 }
 
 // New creates a new Channel enabler
@@ -46,50 +43,35 @@ func New(apiKey, baseURL, placesURI string, size int, categories ...string) (*Ma
 	return me, nil
 }
 
-// FetchMapsDataChan is to fetch data provided by URI and parameters
-func (m *MapEnabler) FetchMapsDataChan(location, category string) {
+// FetchMapsDataWithChan is to fetch data provided by URI and parameters
+func (m *MapEnabler) FetchMapsDataWithChan(location, category string, chanResult chan<- *models.Result) {
 	result := &models.Result{}
 	fullRequestURI := fmt.Sprintf("%sat=%s&cat=%s&apikey=%s&size=%d", m.BaseURL+m.PlacesURI, location, category, m.APIKey, m.Size)
-	fmt.Println(fullRequestURI)
+	glog.Info("Fetching data from maps server. The get request is on the below URL\n", fullRequestURI)
 	response, err := http.Get(fullRequestURI)
 	if err != nil {
-		glog.Info(err)
+		chanResult <- nil
+		glog.Errorln(err)
 		return
 	}
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		glog.Info(err)
+		chanResult <- nil
+		glog.Errorln(err)
+		return
+	}
+	if response.StatusCode != 200 {
+		chanResult <- nil
+		glog.Errorln(string(data))
 		return
 	}
 	err = json.Unmarshal(data, result)
 	if err != nil {
-		glog.Info(err)
+		chanResult <- nil
+		glog.Errorln(err)
 		return
 	}
-	m.ChanResult <- result
-	//return result, nil
-}
-
-// FetchMapsDataWithChan is to fetch data provided by URI and parameters
-func (m *MapEnabler) FetchMapsDataWithChan(location, category string, chanResult chan<- models.Result) {
-	result := models.Result{}
-	fullRequestURI := fmt.Sprintf("%sat=%s&cat=%s&apikey=%s&size=%d", m.BaseURL+m.PlacesURI, location, category, m.APIKey, m.Size)
-	fmt.Println(fullRequestURI)
-	response, err := http.Get(fullRequestURI)
-	if err != nil {
-		glog.Info(err)
-		return
-	}
-	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		glog.Info(err)
-		return
-	}
-	err = json.Unmarshal(data, &result)
-	if err != nil {
-		glog.Info(err)
-		return
-	}
+	glog.Info("Result is fetched from maps server and assigned to the channel")
 	chanResult <- result
 }
 
