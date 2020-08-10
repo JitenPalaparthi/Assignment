@@ -4,6 +4,8 @@ import (
 	"assignment/handlers"
 	"assignment/mapenabler"
 
+	"github.com/golang/glog"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,8 +17,10 @@ func main() {
 	// Creating new MapEnabler instance.
 	// Here Maps Api_Key , URIs to be provided.
 	// What catagories are going to be fetched and size that means number of items to return for each category
-	me, _ := mapenabler.New("NQLeBf6xcolqAFhQyex0sHeAILpgHqSdTT45i1ahPdI", "https://places.ls.hereapi.com", "/places/v1/discover/explore?", 1, "petrol-station", "parking-facility", "restaurant")
-
+	me, err := mapenabler.New("NQLeBf6xcolqAFhQyex0sHeAILpgHqSdTT45i1ahPdI", "https://places.ls.hereapi.com", "/places/v1/discover/explore?", 1, "petrol-station", "parking-facility", "restaurant")
+	if err != nil {
+		glog.Fatalln(err)
+	}
 	gin.ForceConsoleColor()
 	router := gin.Default()
 	router.GET("/ping", handlers.Ping())
@@ -24,6 +28,8 @@ func main() {
 	mapsGroup := router.Group("/v1/maps/")
 	{
 		mapsGroup.GET("places", handlers.FetchPlaces(me))
+		mapsGroup.GET("places/queries", handlers.FetchPlacesByQueries())
+
 	}
 	router.Run()
 }
