@@ -29,7 +29,7 @@ type MapEnabler struct {
 
 // New creates a new Channel enabler
 func New(apiKey, baseURL, placesURI string, size int, categories ...string) (*MapEnabler, error) {
-	if apiKey == "" || baseURL == "" || placesURI == "" || len(categories) == 0 || size <= 0 {
+	if apiKey == "" || baseURL == "" || placesURI == "" || size <= 0 {
 		glog.Errorln("one or more input parameters are not provided")
 		return nil, errors.New("one or more input parameters are not provided")
 	}
