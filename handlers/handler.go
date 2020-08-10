@@ -16,6 +16,15 @@ const (
 	locationMatchString = `^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$`
 )
 
+// Ping is a test call that retuns pong on success
+func Ping() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	}
+}
+
 // FetchPlaces fetches places based on catagories of mapenabler type
 // It is a concurrent function
 func FetchPlaces(me *mapenabler.MapEnabler) func(c *gin.Context) {
